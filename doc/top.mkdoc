@@ -1,0 +1,390 @@
+@include template.mkdoc
+
+@c
+@c Modules definitions
+@c
+
+@moduledef{Errors}
+ @short Common error representation
+ @order 104
+@end moduledef
+
+@moduledef{Master state}
+ @short Master library state
+ @order 105
+@end moduledef
+
+@moduledef{Time}
+ @short Abstract time reference
+ @order 103
+@end moduledef
+
+@moduledef{Address}
+ @short Abstract network address representation
+ @order 102
+@end moduledef
+
+@moduledef{Packet}
+ @short Packet datatypes
+ @order 101
+@end moduledef
+
+@moduledef{Endpoint}
+ @short Input/output endpoint
+ @order 100
+@end moduledef
+
+@moduledef{Peer}
+ @short Peer representation
+ @order 99
+@end moduledef
+
+@moduledef{Client}
+ @short Client implementation
+ @order 98
+@end moduledef
+
+@moduledef{Server}
+ @short Server implementation
+ @order 98
+@end moduledef
+
+@c @moduledef{internal}
+@c  @short Internal structures
+@c  @order 42
+@c @end moduledef
+
+@insert title
+
+@c
+@c Plain Documentation
+@c
+
+@section H {Overview}
+  Rudp is a library aimed at adding reliability features to UDP.
+
+  @list
+    @item Deliver packets in order
+    @item Mark certain packets as reliable, retransmit them
+    @item Drop unordered packets
+    @item Implement server and client models
+  @end list
+@end section
+
+@section H {Table of contents}
+ @insert toc
+@end section
+
+@section HTP {Objects management}
+  @section {Life cycle}
+    @label {olc}
+    Complex objects of the library have a common live cycle:
+    @list
+      @item Allocation is left to the user.
+      @item Initialization is done with
+        @tt{rudp_}@em{<object>}@tt{_init}, it initializes internal
+        state and may allocate private data.  An initialized object is
+        valid for usage, and can be reused.
+      @item Deinitialization is done with
+        @tt{rudp_}@em{<object>}@tt{_deinit}. This function must be
+        called before memory relase.
+      @item Memory release is left to the user.
+    @end list
+  @end section
+
+  @section {Callbacks}
+    When Librudp objects have to hand data back to the application
+    code, they use a callback mechanism.  Callbacks are registered on
+    object initialization.
+
+    For instance with a server, an user code could be:
+
+    @code C
+static
+void my_handle_packet(
+    struct rudp_server *server,
+    struct rudp_peer *peer,
+    struct rudp_packet_chain *packet)
+{
+    /* Do something with the packet */
+}
+
+static
+void my_link_info(
+    struct rudp_server *server,
+    struct rudp_peer *peer,
+    struct rudp_link_info *info)
+{
+    /* Do something with the link info */
+}
+
+static
+void my_peer_new(
+    struct rudp_server *server,
+    struct rudp_peer *peer)
+{
+    /* Do something with the link peer */
+}
+
+static
+void my_peer_dropped(
+    struct rudp_server *server,
+    struct rudp_peer *peer)
+{
+    /* Do something with the link peer */
+}
+
+static const struct rudp_server_handler my_server_handler =
+{
+    .handle_packet = my_handle_packet,
+    .link_info = my_link_info,
+    .peer_dropped = my_peer_dropped,
+    .peer_new = my_peer_new,
+};
+
+/* Server initialization */
+void my_server_init()
+{
+    struct rudp_server *server = malloc(sizeof(*server));
+    struct ela_el *el = ...;
+
+    rudp_error_t err = rudp_server_init(server, el, &my_server_handler);
+}
+    @end code
+  @end section
+
+  @section {Memory management}
+    Memory allocation for the objects can be done as user likes most.
+    User may embed rudp objects it allocates itself in a bigger
+    structure like:
+
+    @code C
+struct my_server
+{
+    struct rudp_server server;
+    struct my_user_data;
+};
+
+static void my_handle_packet(
+    struct rudp_server *_server,
+    struct rudp_peer *peer,
+    struct rudp_packet_chain *packet)
+{
+    struct my_server *server = (struct my_server *)_server;
+
+    /* Do something with server->my_user_data and packet */
+}
+
+/* Initialize the server */
+
+void my_server_init()
+{
+    struct my_server *server;
+
+    /* allocate space for server */
+    server = malloc(sizeof(*server));
+
+    /* check allocation error */
+
+    /* find an ELA implementation */
+    struct ela_el *el = ...;
+
+    rudp_error_t err =
+        rudp_server_init(&server->server, el, &my_server_handler);
+
+    /* handle errors, be happy */
+}
+    @end code
+  @end section
+@end section
+
+@section HTP {User API}
+  @section {Master state}
+    @insert {@rudp/rudp.h} decl_inline_doc
+  @end section
+
+  @section {Utilities}
+    @section {Time}
+      @insert {@rudp/time.h} decl_inline_doc
+    @end section
+
+    @section {Erros}
+      @insert {@rudp/error.h} decl_inline_doc
+    @end section
+
+    @section {Addresses}
+      @insert {@rudp/address.h} decl_inline_doc
+    @end section
+  @end section
+
+  @section {Client/server model}
+    @section {Client}
+      @insert {@rudp/client.h} decl_inline_doc
+    @end section
+
+    @section {Server}
+      @insert {@rudp/server.h} decl_inline_doc
+    @end section
+  @end section
+@end section
+
+@section HTP {Internal library implementation}
+  @section {Peer}
+    @insert {@rudp/peer.h} decl_inline_doc
+  @end section
+
+  @section {Endpoint}
+    @insert {@rudp/endpoint.h} decl_inline_doc
+  @end section
+@end section
+
+@section HTP {Protocol}
+  @section {Network protocol}
+    @section {Features}
+      Rudp has the following features:
+      @list
+        @item Strict in-order delivery of packets.
+        @item Packets may be reliable or not, this is a per-packet
+          setting.
+        @item Packets cannot be delivered to the application twice.
+      @end list
+    @end section
+
+    @section {Packet header}
+      @table 4
+        @item Offset (bit) @item Size (bits) @item Name    @item Description
+        @item 0            @item 8           @item CMD     @item Command
+        @item 8            @item 5           @item RES     @item Reserved
+        @item 13           @item 1           @item RET     @item Retransmitted flag
+        @item 14           @item 1           @item ACK     @item Acknowledge flag
+        @item 15           @item 1           @item REL     @item Reliable flag
+        @item 16           @item 16          @item ACK_SEQ @item Acknowledge sequence number
+        @item 32           @item 16          @item REL_SEQ @item Reliable sequence number
+        @item 48           @item 16          @item UNR_SEQ @item Unreliable sequence number
+      @end table
+
+      On each transmitted packet, REL is optional. If set, packet is
+      reliable and must be acknowledged by peer.
+
+      A reliable packet must have a REL_SEQ immediately after the
+      previous reliable packet sent. UNR_SEQ must be 0.
+
+      Acknowledge of a reliable packet may be piggybacked in any
+      packet going the other way (reliable or not). It is present when
+      ACK is set. Acknowledged sequence number is in ACK_SEQ.
+
+      An unreliable packet has no REL flag set. It has the same
+      REL_SEQ number as the latest reliable packet transmitted, and
+      is assigned next UNR_SEQ number.
+
+      RET flag is present for reliable packets that were already sent
+      on the wire at least once before.
+    @end section
+
+    @section {Retransmits}
+      Receiver may loose any unreliable packet harmlessly (reason may
+      be loss of packet, unsequenced packet, etc.).
+
+      Reliable packets may be lost any time, but must be retransmitted
+      by the Sender until acknowledged.
+
+      If a Receiver gets an out-of-sequence reliable packet, it must
+      drop it until the transmitter resends the expected in-sequence
+      packet.
+
+      If a Receiver gets a reliable packet twice (or more), it must
+      acknowledge its sequence number again, but must not interpret
+      the contents again.
+    @end section
+
+    @section {Connection handshake}
+      Low-level protocol is peer-to-peer. As UDP is not connected, one
+      of the two involved peers must send a packet first. Any of the
+      two can do it. This packet is expected to be containing a @ref
+      RUDP_CMD_CONN_REQ command with reliable sequence number to a
+      random value.. This packet should be reliable, i.e. imply
+      retransmits in the sender's code.
+
+      Peer is expected to answer with an unreliable packet containing
+      both an ACK and a @ref RUDP_CMD_CONN_RSP packet.  Its sequence
+      number must be random as well. If the
+      response packet is lost in transit, handshake will fail and must
+      be started over.  This is intended.
+
+      After these two packets are exchanged, connection is established.
+      Each peer takes the sequence number it received in first packet
+      as granted.  This is only true for first packet.
+
+      On an established connection, 3 main types of packets may transit:
+      @list
+        @item Ping/Pong packets
+        @item Noop packets
+        @item Data packets
+      @end list
+    @end section
+
+    @section {Packet types}
+      @section {Noop}
+        Noop packets have the @ref RUDP_CMD_NOOP command value.  They
+        serve no applicative purpose and should contain no data.
+        Nevertheless, Noop packets can be reliably sent (forcing it to
+        be acknowledged), and conveys an acknowledge sequence number.
+
+        This packet type is well suited for feeding acknowledges.
+      @end section
+
+      @section {Ping/Pong}
+        Ping packets have the @ref RUDP_CMD_PING command value. They
+        should be sent reliably, but do not necessarily imply a PONG
+        packet.  An acknowledge is still expected though:
+
+        Ping payload is optional and must be copied verbatim in the
+        matching Pong packet. Ping Sender (thus Pong receiver) can use
+        it for statistics purposes.
+
+        If Ping packet had to be retransmitted by the sender to reach
+        its peer (see @ref #RUDP_OPT_RETRANSMITTED), it may contain
+        outdated information. Therefore, a peer is expected NOT to
+        send Pong packet marked retransmitted.  Nevertheless, Peer
+        must always acknowledge the packet sequence.
+
+        This way, Ping is actually an "echo" request.  It makes a
+        payload go both ways.  If the sender stack needs an
+        acknowledge, it must say so.
+
+        Implementation detail:
+        Current peer implementation uses Ping to evaluate the link RTT
+        and check the link validity at the same time.  It puts a
+        timestamp in the sent packet and waits for it to come back.
+        This behaviour may evolve in future revisions of the library.
+      @end section
+
+      @section {Data}
+        Data packets have the @ref RUDP_CMD_APP (or any superior)
+        command value.  They are sent reliably or not, depending on
+        user's needs.  Their semantics are left to the user.
+      @end section
+    @end section
+
+    @section {Packet C structure}
+      @insert {@rudp/packet.h} decl_inline_doc
+    @end section
+
+  @end section
+@end section
+
+@section HTP {Headers}
+
+  @section {Header list}
+    @insert {header} compound_table
+  @end section
+
+  @insert {header} all_compound_sections
+
+  @section {All declarations}
+    @insert global_scope_doc
+  @end section
+
+@end section
+
+@c @insert global_scope_section
