@@ -21,3 +21,15 @@ ltmain.sh
 m4
 doc/html
 configure
+*.o
+*.lo
+test/Makefile
+test/test-client
+test/test-server
+src/Makefile
+rudp.pc
+config.log
+config.status
+*~
+Makefile
+*.la
