@@ -27,6 +27,7 @@
 
 #include <stdint.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 /**
    @this is an abstract time type definition.  It contains miliseconds
