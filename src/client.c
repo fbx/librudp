@@ -66,7 +66,6 @@ rudp_error_t rudp_client_close(struct rudp_client *client)
 rudp_error_t rudp_client_deinit(struct rudp_client *client)
 {
     rudp_endpoint_deinit(&client->endpoint);
-    rudp_address_deinit(&client->address);
     return 0;
 }
 
