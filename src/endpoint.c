@@ -57,10 +57,8 @@ _endpoint_handle_incoming(struct ela_event_source *src,
     rudp_error_t ret = rudp_endpoint_recv(
         endpoint, pc->packet, &pc->len, &addr);
 
-    if ( ret != 0 )
-        rudp_packet_chain_free(endpoint->rudp, pc);
-
-    endpoint->handler->handle_packet(endpoint, &addr, pc);
+    if (ret == 0)
+        endpoint->handler->handle_packet(endpoint, &addr, pc);
 
     rudp_packet_chain_free(endpoint->rudp, pc);
 }
