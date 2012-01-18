@@ -15,8 +15,8 @@
 #include <rudp/list.h>
 
 #define __container_of(ptr, sample, member)                 \
-    (void *)((char *)(ptr)  -                   \
-         ((char *)&(sample)->member - (char *)(sample)))
+    ((typeof(sample))((uintptr_t)(ptr)  -                   \
+         (uintptr_t)(&((typeof(sample))NULL)->member)))
 
 #define rudp_list_for_each(pos, head, member)               \
     for (pos = 0, pos = __container_of((head)->next, pos, member);  \
