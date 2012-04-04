@@ -10,8 +10,7 @@ AC_CONFIG_SRCDIR([src/rudp.c])
 AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([1.10 foreign dist-bzip2])
-
-dnl AM_SILENT_RULES([yes])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Checks for programs.
 AC_PROG_CC
