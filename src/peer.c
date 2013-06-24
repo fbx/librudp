@@ -137,16 +137,7 @@ void rudp_peer_from_sockaddr(
     struct rudp_endpoint *endpoint)
 {
     rudp_peer_init(peer, rudp, handler, endpoint);
-
-    struct sockaddr_in6 *p6 = (struct sockaddr_in6 *)addr;
-    struct sockaddr_in *p = (struct sockaddr_in *)addr;
-
-    if ( p->sin_family == AF_INET )
-        rudp_address_set_ipv4(&peer->address,
-                              &p->sin_addr, ntohs(p->sin_port));
-    else
-        rudp_address_set_ipv6(&peer->address,
-                              &p6->sin6_addr, ntohs(p6->sin6_port));
+    rudp_address_set(&peer->address, (struct sockaddr *) addr, sizeof (*addr));
 }
 
 /* Sync handling */
