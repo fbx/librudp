@@ -178,6 +178,19 @@ void rudp_address_set_ipv6(
     const uint16_t port);
 
 /**
+   @this specifies an address (AF_INET or AF_INET6)
+
+   @param addr The address structure
+   @param address Generic address to use
+   @param size Address structure size
+ */
+RUDP_EXPORT
+rudp_error_t rudp_address_set(
+    struct rudp_address *rua,
+    const struct sockaddr *sockaddr,
+    socklen_t size);
+
+/**
    @this initializes an address structure for future usage.  This
    function must be called before any other address-related function
    on the structure.

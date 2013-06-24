@@ -152,6 +152,33 @@ void rudp_address_set_ipv6(
     memcpy(&addr->sin6_addr, in6_addr, sizeof(struct in6_addr));
 }
 
+rudp_error_t rudp_address_set(
+    struct rudp_address *rua,
+    const struct sockaddr *sockaddr,
+    socklen_t size)
+{
+    if (size > sizeof (*rua->addr))
+        return -EINVAL;
+
+    switch (sockaddr->sa_family)
+    {
+    case AF_INET:
+        rua->port = ((struct sockaddr_in *)sockaddr)->sin_port;
+        break;
+    case AF_INET6:
+        rua->port = ((struct sockaddr_in6 *)sockaddr)->sin6_port;
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    rua->text[0] = 0;
+    rua->resolver_state = RUDP_RESOLV_ADDR;
+    memcpy(rua->addr, sockaddr, size);
+
+    return 0;
+}
+
 rudp_error_t rudp_address_next(
     struct rudp_address *rua)
 {
