@@ -79,7 +79,7 @@ rudp_error_t rudp_endpoint_bind(struct rudp_endpoint *endpoint)
         return err;
     }
 
-    int family = AF_INET;
+    int family = AF_INET6;
 
     if ( addr )
         family = ((const struct sockaddr_in *)addr)->sin_family;
