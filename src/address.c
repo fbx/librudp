@@ -157,19 +157,19 @@ rudp_error_t rudp_address_set(
     const struct sockaddr *sockaddr,
     socklen_t size)
 {
-    if (size > sizeof (*rua->addr))
-        return -EINVAL;
+    if (size < sizeof (*sockaddr) || size > sizeof (*rua->addr))
+        return EINVAL;
 
     switch (sockaddr->sa_family)
     {
     case AF_INET:
-        rua->port = ((struct sockaddr_in *)sockaddr)->sin_port;
+        rua->port = ntohs(((struct sockaddr_in *)sockaddr)->sin_port);
         break;
     case AF_INET6:
-        rua->port = ((struct sockaddr_in6 *)sockaddr)->sin6_port;
+        rua->port = ntohs(((struct sockaddr_in6 *)sockaddr)->sin6_port);
         break;
     default:
-        return -EINVAL;
+        return EAFNOSUPPORT;
     }
 
     rua->text[0] = 0;
