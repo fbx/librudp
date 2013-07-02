@@ -167,6 +167,10 @@ void rudp_address_set_ipv4(
 /**
    @this specifies an IPv6 address and port
 
+   @deprecated
+   This function should not be used anymore, since it does not allow
+   to set the IPv6 scope. Use @ref rudp_address_set instead.
+
    @param addr The address structure
    @param address IPv6 to use (usual @tt {struct in6_addr} order)
    @param port Numeric target port (machine order)
@@ -175,20 +179,22 @@ RUDP_EXPORT
 void rudp_address_set_ipv6(
     struct rudp_address *addr,
     const struct in6_addr *address,
-    const uint16_t port);
+    const uint16_t port) RUDP_DEPRECATED;
 
 /**
-   @this specifies an address (AF_INET or AF_INET6)
+   @this specifies an address to connect to. Supported address families
+   are AF_INET and AF_INET6.
 
-   @param addr The address structure
-   @param address Generic address to use
-   @param size Address structure size
+   @param rua The address handle
+   @param addr IPv4 or IPv6 address structure to set
+   @param addrlen Size of the address structure
+   @returns 0 on success, EAFNOSUPPORT if address family is not supported
  */
 RUDP_EXPORT
 rudp_error_t rudp_address_set(
     struct rudp_address *rua,
-    const struct sockaddr *sockaddr,
-    socklen_t size);
+    const struct sockaddr *addr,
+    socklen_t addrlen);
 
 /**
    @this initializes an address structure for future usage.  This

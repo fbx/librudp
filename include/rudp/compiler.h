@@ -25,4 +25,11 @@
 #define RUDP_EXPORT
 #endif
 
+/* GCC deprecated */
+#if defined(__GNUC__) && __GNUC__ >= 4 /** mkdoc:skip */
+#define RUDP_DEPRECATED __attribute__ ((deprecated))
+#else
+#define RUDP_DEPRECATED
+#endif
+
 #endif

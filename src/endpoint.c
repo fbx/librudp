@@ -9,6 +9,7 @@
   See AUTHORS for details
  */
 
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 #include <rudp/error.h>
@@ -186,7 +187,23 @@ void rudp_endpoint_set_ipv6(
     const struct in6_addr *address,
     const uint16_t port)
 {
-    return rudp_address_set_ipv6(&endpoint->addr, address, port);
+    struct sockaddr_in6 addr6;
+
+    memset(&addr6, 0, sizeof (addr6));
+    addr6.sin6_family = AF_INET6;
+    addr6.sin6_addr = *address;
+    addr6.sin6_port = htons(port);
+
+    rudp_address_set(&endpoint->addr, (struct sockaddr *)&addr6,
+                     sizeof (addr6));
+}
+
+rudp_error_t rudp_endpoint_set_addr(
+    struct rudp_endpoint *endpoint,
+    const struct sockaddr *addr,
+    socklen_t addrlen)
+{
+    return rudp_address_set(&endpoint->addr, addr, addrlen);
 }
 
 rudp_error_t rudp_endpoint_set_hostname(

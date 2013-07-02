@@ -122,13 +122,27 @@ rudp_error_t rudp_endpoint_set_hostname(
     uint32_t ip_flags);
 
 /**
+   @this specifies an address to bind to. Supported address families
+   are AF_INET and AF_INET6.
+
+   @param server An initialized server context structure
+   @param addr IPv4 or IPv6 address to use
+   @param addrlen Size of the address structure
+   @returns 0 on success, EAFNOSUPPORT if address family is not supported
+ */
+RUDP_EXPORT
+rudp_error_t rudp_endpoint_set_addr(
+    struct rudp_endpoint *endpoint,
+    const struct sockaddr *addr,
+    socklen_t addrlen);
+
+/**
    @this specifies an IPv4 address to bind to.  @see
    rudp_address_set_ipv4 for details.
 
    @param endpoint An initialized endpoint context structure
    @param address IPv4 to use (usual @tt {struct in_addr} order)
    @param port Numeric target port (machine order)
-   @returns a possible error
  */
 RUDP_EXPORT
 void rudp_endpoint_set_ipv4(
@@ -140,16 +154,19 @@ void rudp_endpoint_set_ipv4(
    @this specifies an IPv6 address to bind to.  @see
    rudp_address_set_ipv6 for details.
 
+   @deprecated
+   This function should not be used anymore, since it does not allow
+   to set the IPv6 scope. Use @ref rudp_endpoint_set_addr instead.
+
    @param endpoint An initialized endpoint context structure
    @param address IPv6 to use (usual @tt {struct in6_addr} order)
    @param port Numeric target port (machine order)
-   @returns a possible error
  */
 RUDP_EXPORT
 void rudp_endpoint_set_ipv6(
     struct rudp_endpoint *endpoint,
     const struct in6_addr *address,
-    const uint16_t port);
+    const uint16_t port) RUDP_DEPRECATED;
 
 /**
    @this open and binds an endpoint to its address

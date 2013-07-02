@@ -33,7 +33,7 @@
    An initialized but not yet connected Client context must have its
    server address setup with any of the following functions: @ref
    rudp_client_set_hostname, @ref rudp_client_set_ipv4 or @ref
-   rudp_client_set_ipv6.
+   rudp_client_set_addr.
 
    Once the server address is setup properly, Client context can be
    connected with @ref rudp_client_connect.  After successful
@@ -181,7 +181,7 @@ rudp_error_t rudp_client_init(
 /**
    @this tries to establish a connection with the server.  Server
    address can be set with any of the @ref rudp_client_set_hostname,
-   @ref rudp_client_set_ipv4 or @ref rudp_client_set_ipv6.
+   @ref rudp_client_set_ipv4 or @ref rudp_client_set_addr.
 
    @param client An initialized client context structure
 
@@ -230,13 +230,27 @@ rudp_error_t rudp_client_set_hostname(
     uint32_t ip_flags);
 
 /**
+   @this specifies an address to connect to. Supported address families
+   are AF_INET and AF_INET6.
+
+   @param server An initialized server context structure
+   @param addr IPv4 or IPv6 address to use
+   @param addrlen Size of the address structure
+   @returns 0 on success, EAFNOSUPPORT if address family is not supported
+ */
+RUDP_EXPORT
+rudp_error_t rudp_client_set_addr(
+    struct rudp_client *client,
+    const struct sockaddr *addr,
+    socklen_t addrlen);
+
+/**
    @this specifies an IPv4 address to connect to.  @see
    rudp_address_set_ipv4 for details.
 
    @param client An initialized client context structure
    @param address IPv4 to use (usual @tt {struct in_addr} order)
    @param port Numeric target port (machine order)
-   @returns a possible error
  */
 RUDP_EXPORT
 void rudp_client_set_ipv4(
@@ -248,16 +262,19 @@ void rudp_client_set_ipv4(
    @this specifies an IPv6 address to connect to.  @see
    rudp_address_set_ipv6 for details.
 
+   @deprecated
+   This function should not be used anymore, since it does not allow
+   to set the IPv6 scope. Use @ref rudp_client_set_addr instead.
+
    @param client An initialized client context structure
    @param address IPv6 to use (usual @tt {struct in6_addr} order)
    @param port Numeric target port (machine order)
-   @returns a possible error
  */
 RUDP_EXPORT
 void rudp_client_set_ipv6(
     struct rudp_client *client,
     const struct in6_addr *address,
-    const uint16_t port);
+    const uint16_t port) RUDP_DEPRECATED;
 
 /**
    @this sends data to remote server

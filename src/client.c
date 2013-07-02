@@ -188,5 +188,21 @@ void rudp_client_set_ipv6(
     const struct in6_addr *address,
     const uint16_t port)
 {
-    return rudp_address_set_ipv6(&client->address, address, port);
+    struct sockaddr_in6 addr6;
+
+    memset(&addr6, 0, sizeof (addr6));
+    addr6.sin6_family = AF_INET6;
+    addr6.sin6_addr = *address;
+    addr6.sin6_port = htons(port);
+
+    rudp_address_set(&client->address, (struct sockaddr *)&addr6,
+                     sizeof (addr6));
+}
+
+rudp_error_t rudp_client_set_addr(
+    struct rudp_client *client,
+    const struct sockaddr *addr,
+    socklen_t addrlen)
+{
+    return rudp_address_set(&client->address, addr, addrlen);
 }
