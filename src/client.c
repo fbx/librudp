@@ -38,6 +38,7 @@ rudp_error_t rudp_client_init(
 rudp_error_t rudp_client_connect(struct rudp_client *client)
 {
     const struct sockaddr_storage *addr;
+    struct sockaddr bind_addr;
     socklen_t size;
 
     rudp_error_t err = rudp_address_get(&client->address, &addr, &size);
@@ -49,6 +50,10 @@ rudp_error_t rudp_client_connect(struct rudp_client *client)
                             &client_peer_handler, &client->endpoint);
 
     rudp_peer_send_connect(&client->peer);
+
+    memset(&bind_addr, 0, sizeof (bind_addr));
+    bind_addr.sa_family = addr->ss_family;
+    rudp_endpoint_set_addr(&client->endpoint, &bind_addr, sizeof (bind_addr));
 
     return rudp_endpoint_bind(&client->endpoint);
 }

@@ -80,12 +80,7 @@ rudp_error_t rudp_endpoint_bind(struct rudp_endpoint *endpoint)
         return err;
     }
 
-    int family = AF_INET6;
-
-    if ( addr )
-        family = ((const struct sockaddr_in *)addr)->sin_family;
-
-    int ret = socket(family, SOCK_DGRAM, 0);
+    int ret = socket(addr ? addr->ss_family : AF_INET6, SOCK_DGRAM, 0);
 
     if ( ret == -1 )
         return errno;
