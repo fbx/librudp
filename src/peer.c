@@ -610,8 +610,10 @@ rudp_error_t rudp_peer_send_connect(struct rudp_peer *peer)
 {
     struct rudp_packet_chain *pc = rudp_packet_chain_alloc(
         peer->rudp, sizeof(struct rudp_packet_conn_req));
+    struct rudp_packet_conn_req *conn_req = &pc->packet->conn_req;
 
-    pc->packet->header.command = RUDP_CMD_CONN_REQ;
+    conn_req->header.command = RUDP_CMD_CONN_REQ;
+    conn_req->data = 0;
 
     peer->state = PEER_CONNECTING;
 
@@ -652,6 +654,8 @@ static void peer_send_queue(struct rudp_peer *peer)
             header->opt |= RUDP_OPT_ACK;
             header->reliable_ack = htons(peer->in_seq_reliable);
 //            peer->must_ack = 0;
+        } else {
+            header->reliable_ack = 0;
         }
 
         rudp_log_printf(peer->rudp, RUDP_LOG_IO,
