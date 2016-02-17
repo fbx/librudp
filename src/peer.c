@@ -101,8 +101,12 @@ void rudp_peer_deinit(struct rudp_peer *peer)
 {
     rudp_peer_reset(peer);
     rudp_address_deinit(&peer->address);
-    ela_source_free(peer->rudp->el, peer->service_source);
-    peer->service_source = NULL;
+
+    /* Avoid SEGFAULT in case rudp_peer_deinit() is called more than once. */
+    if (peer->service_source != NULL) {
+        ela_source_free(peer->rudp->el, peer->service_source);
+        peer->service_source = NULL;
+    }
 }
 
 static void peer_update_rtt(struct rudp_peer *peer, rudp_time_t last_rtt)
