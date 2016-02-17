@@ -338,6 +338,7 @@ rudp_error_t rudp_peer_incoming_packet(
     struct rudp_peer *peer, struct rudp_packet_chain *pc)
 {
     const struct rudp_packet_header *header = &pc->packet->header;
+    struct rudp *rudp;
 
     rudp_log_printf(peer->rudp, RUDP_LOG_IO,
                     "<<< incoming [%d] %s %s (%d) %04x:%04x\n",
@@ -399,9 +400,12 @@ rudp_error_t rudp_peer_incoming_packet(
         switch ( header->command )
         {
         case RUDP_CMD_CLOSE:
+            /* Save "rudp" here because "peer" might be freed at the dropped()
+             * handler (server). */
+            rudp = peer->rudp;
             peer->state = PEER_DEAD;
             peer->handler->dropped(peer);
-            rudp_log_printf(peer->rudp, RUDP_LOG_INFO,
+            rudp_log_printf(rudp, RUDP_LOG_INFO,
                             "      peer dropped\n");
             return 0;
 
