@@ -99,8 +99,12 @@ void rudp_peer_deinit(struct rudp_peer *peer)
 {
     rudp_peer_reset(peer);
     rudp_address_deinit(&peer->address);
-    ela_source_free(peer->rudp->el, peer->service_source);
-    peer->service_source = NULL;
+
+    /* Avoid SEGFAULT in case rudp_peer_deinit() is called more than once. */
+    if (peer->service_source != NULL) {
+        ela_source_free(peer->rudp->el, peer->service_source);
+        peer->service_source = NULL;
+    }
 }
 
 static void peer_update_rtt(struct rudp_peer *peer, rudp_time_t last_rtt)
@@ -332,6 +336,7 @@ rudp_error_t rudp_peer_incoming_packet(
     struct rudp_peer *peer, struct rudp_packet_chain *pc)
 {
     const struct rudp_packet_header *header = &pc->packet->header;
+    struct rudp *rudp;
 
     rudp_log_printf(peer->rudp, RUDP_LOG_IO,
                     "<<< incoming [%d] %s %s (%d) %04x:%04x\n",
@@ -393,9 +398,12 @@ rudp_error_t rudp_peer_incoming_packet(
         switch ( header->command )
         {
         case RUDP_CMD_CLOSE:
+            /* Save "rudp" here because "peer" might be freed at the dropped()
+             * handler (server). */
+            rudp = peer->rudp;
             peer->state = PEER_DEAD;
             peer->handler->dropped(peer);
-            rudp_log_printf(peer->rudp, RUDP_LOG_INFO,
+            rudp_log_printf(rudp, RUDP_LOG_INFO,
                             "      peer dropped\n");
             return 0;
 
@@ -608,8 +616,10 @@ rudp_error_t rudp_peer_send_connect(struct rudp_peer *peer)
 {
     struct rudp_packet_chain *pc = rudp_packet_chain_alloc(
         peer->rudp, sizeof(struct rudp_packet_conn_req));
+    struct rudp_packet_conn_req *conn_req = &pc->packet->conn_req;
 
-    pc->packet->header.command = RUDP_CMD_CONN_REQ;
+    conn_req->header.command = RUDP_CMD_CONN_REQ;
+    conn_req->data = 0;
 
     peer->state = PEER_CONNECTING;
 
@@ -650,6 +660,8 @@ static void peer_send_queue(struct rudp_peer *peer)
             header->opt |= RUDP_OPT_ACK;
             header->reliable_ack = htons(peer->in_seq_reliable);
 //            peer->must_ack = 0;
+        } else {
+            header->reliable_ack = 0;
         }
 
         rudp_log_printf(peer->rudp, RUDP_LOG_IO,
