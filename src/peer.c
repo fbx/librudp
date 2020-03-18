@@ -9,8 +9,6 @@
   See AUTHORS for details
  */
 
-#define _BSD_SOURCE
-
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
